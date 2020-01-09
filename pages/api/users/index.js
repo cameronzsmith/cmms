@@ -82,6 +82,7 @@ module.exports = async(req, res) => {
 
             if(passwordBlank || emailBlank || securityGroupBlank) {
                 res.status(400).json({ success: false, message: "You must supply an email, password, and security group!" });
+                break;
             }
 
             // Check if the email address being aupplied already exists
