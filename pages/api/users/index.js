@@ -119,7 +119,7 @@ module.exports = async(req, res) => {
             // Insert the new user into the database
             result = await db.query(escape`
                 INSERT INTO user (email, password, first_name, last_name, phone_number, job_title, security_group, created_at, created_by, last_updated_at, last_updated_by)
-                VALUES (${email}, ${hash}, ${firstName}, ${lastName}, ${phoneNumber}, ${jobTitle}, ${securityGroupID}, NOW(), 'cameron@devforia.com', NOW(), 'cameron@devforia.com')
+                VALUES (${email}, ${hash}, ${firstName}, ${lastName}, ${phoneNumber}, ${jobTitle}, ${securityGroupID}, NOW(), ${user.data[0].email}, NOW(), ${user.data[0].email})
             `)
 
             res.status(200).json({ success: true, result });
