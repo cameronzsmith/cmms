@@ -17,7 +17,7 @@ module.exports = async(req, res) => {
 
             if(emailBlank || passwordBlank) {
                 const returnMsg  = `You must provide ${(emailBlank) ? "an email address" : ""}${(emailBlank && passwordBlank) ? " and " : ""}${(passwordBlank) ? "a password" : ""}`;
-                res.status(401).json({ success: false, message: returnMsg });
+                res.status(400).json({ success: false, message: returnMsg });
             }
             
             // After checking that we've received valid parameters, query the database for the supplied email address to compare the password and to store the payload
@@ -30,7 +30,7 @@ module.exports = async(req, res) => {
             // Compare the password provided in the POST request with the password of the user supplied
             const match = await bcrypt.compare(password, user[0].password);
             if(match) {        
-                
+
                 // Use JWT to sign a user token that expires after 1 hour
                 const privateKey = fs.readFileSync('./private.key', 'utf8');
                 jwt.sign({ data: user }, privateKey, { algorithm: 'RS256', expiresIn: "1h" }, (err, token) => {
