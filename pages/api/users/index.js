@@ -4,65 +4,99 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
+async function VerifyUser(req, res, groups) {
+    try {
+        let user = {};
+        let userHasPermissions = false;
+        console.log(userHasPermissions);
+
+        // Check if a valid user token was provided
+        const token = await req.headers.token;
+        if(token === undefined || token == "") {
+            throw "Token is undefined or empty."
+        }
+        
+        // Store the payload data if a valid token is provided
+        const cert = fs.readFileSync('./public.key', 'utf8');
+        jwt.verify(token, cert, { algorithms: ['RS256'] }, function(err, payload) {
+            if(err) {
+                throw err.message;
+            } else {
+                user = payload;
+            }
+        });
+
+        // Retrieve the name of the security group the user belongs to
+        let result = await db.query(escape`
+            SELECT title
+            FROM security_group
+            WHERE id = ${user.data[0].security_group}
+        `)
+
+        // Check if the user belongs to a group allowed to create users
+        const createdBySecurityGroup = result[0].title
+        for(let i = 0; i < groups.length; ++i) {
+            if(createdBySecurityGroup === groups[i]) {
+                userHasPermissions = true;
+                break;
+            }
+        }
+
+        // Only continue if the user has a valid token and permissions to create users.
+        if(!userHasPermissions) {
+            throw "You don't have sufficient privileges."
+        }
+    }
+    catch (err) {
+        res.status(401).json({ success: false, message: err });
+        return false;
+    }
+
+    return true;
+}
+
 module.exports = async(req, res) => {
+    let allowedGroups = [];
+
     switch(req.method) {
         case 'GET':
+            // Verify the user's token and that they belong to the appropriate group(s)
+            allowedGroups = ["Administrator", "Lead", "Technician", "Read Only"];
+            let canGetUsers = await VerifyUser(req, res, allowedGroups);
+            if(!canGetUsers) break;
+
+            // Get the limit parameters to reduce payload size
             let page = parseInt(req.query.page) || 1
             const limit = parseInt(req.query.limit) || 9
             if (page < 1) page = 1
+            
+            // Query for the user information
             const users = await db.query(escape`
-                SELECT *
+                SELECT id, email, first_name, last_name, phone_number, job_title, security_group, date_of_last_login, created_at, created_by, last_updated_at, last_updated_by
                 FROM user
                 ORDER BY first_name
                 LIMIT ${(page - 1) * limit}, ${limit}
             `)
+            
+            // Get the count of the total users
             const count = await db.query(escape`
                 SELECT COUNT(*)
                 AS userCount
                 FROM user
             `)
+
+            // Store the summary values to return in response
             const { userCount } = count[0]
             const pageCount = Math.ceil(userCount / limit)
-            res.status(200).json({ users, userCount, pageCount, page })
-            break
+
+            res.status(200).json({ success: true, result: { users, userCount, pageCount, page }  })
+            break;
+
         case 'POST':
-            // Check if a valid user token was provided
-            let hasError = false;
-            let hasPermissions = false;
-            const token = await req.headers.token;
-            const cert = fs.readFileSync('./public.key', 'utf8');
-
-            // Store the payload data if a valid token is provided
-            let user = {};
-            jwt.verify(token, cert, { algorithms: ['RS256'] }, function(err, payload) {
-                if(err) {
-                    res.send({ success: false, message: err.message });
-                    hasError = true;
-                } else {
-                    user = payload;
-                }
-            });
-
-            if(hasError) break;
-
-            // Retrieve the name of the security group the user belongs to
-            let result = await db.query(escape`
-                SELECT title
-                FROM security_group
-                WHERE id = ${user.data[0].security_group}
-            `)
-
-            // Check if the user belongs to the group(s) allowed to create users
-            const createdBySecurityGroup = result[0].title
-            if(createdBySecurityGroup === "Administrator" || createdBySecurityGroup == "Lead") {
-                hasPermissions = true;
-            }
-            
-            // Only continue if the user has a valid token and permissions to create users.
-            if(!hasPermissions) {
-                res.send({ success: false, message: "You don't have sufficient privileges!" });
-                break;
-            } 
+            // Verify the user
+            allowedGroups = ["Administrator", "Lead"];
+            canCreateUser = await VerifyUser(req, res, allowedGroups);
+            if(!canCreateUser) break;
 
             // Required parameters
             let password = req.query.password
