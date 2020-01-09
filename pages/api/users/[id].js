@@ -1,11 +1,11 @@
-export default (req, res) => {
-    switch(req.method) {
-        case 'GET':
-            break
-        case 'POST':
-            break
-        default:
-            res.status(405).end() // Methd not allowed
-            break
-    }
+const db = require('../../../lib/db')
+const escape = require('sql-template-strings')
+
+module.exports = async (req, res) => {
+    const [user] = await db.query(escape`
+        SELECT *
+        FROM user
+        WHERE id = ${req.query.id}
+    `)
+    res.status(200).json({ user })
 }
