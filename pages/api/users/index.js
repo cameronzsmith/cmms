@@ -43,6 +43,8 @@ module.exports = async(req, res) => {
                 }
             });
 
+            if(hasError) break;
+
             // Retrieve the name of the security group the user belongs to
             let result = await db.query(escape`
                 SELECT title
@@ -57,7 +59,6 @@ module.exports = async(req, res) => {
             }
             
             // Only continue if the user has a valid token and permissions to create users.
-            if(hasError) break;
             if(!hasPermissions) {
                 res.send({ success: false, message: "You don't have sufficient privileges!" });
                 break;
