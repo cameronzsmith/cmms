@@ -1,12 +1,11 @@
 const db = require('../../../lib/db');
 const escape = require('sql-template-strings');
-const bcrypt = require('bcryptjs');
-const API = require('../../../lib/api');
+const Auth = require('../../../lib/auth');
 const User = require('../../../routes/user');
 
 module.exports = async(req, res) => {     
      // Create a new user session and store their data
-     const session = new API.Session(await req.headers.token);
+     const session = new Auth.Session(await req.headers.token);
      const params = req.query;
 
      // Store the user data, returning an error if the user couldn't be authenticated

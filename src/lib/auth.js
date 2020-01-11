@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const db = require('./db');
 const escape = require('sql-template-strings');
 
+/** @module Authentication */
+
 /** 
  * @class Session
  * This is the API Session class. It will log the user in, store their token, and store all of the routes that require an authorized API session.
@@ -51,7 +53,7 @@ class Session {
                 if(err) {
                     throw err.message;
                 } else {
-                    delete payload.data[0]["password"];
+                    delete payload.data[0]["password"]; // Delete the password from the payload before storing.
                     userData = payload.data[0];
                 }
             });

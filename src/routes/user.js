@@ -1,5 +1,7 @@
-const db = require('../lib/db');
+const bcrypt = require('bcryptjs');
 const escape = require('sql-template-strings');
+
+const db = require('../lib/db');
 
 /** @module User */
 
@@ -98,15 +100,23 @@ async function CreateUser (session, params) {
 
        // Retrieves the security group ID using the parameter supplied
        result = await db.query(escape`
-           SELECT id
+           SELECT id, title, access_level
            FROM security_group
            WHERE title = ${securityGroup}
        `)
-       
+
        // Verify the user provided a valid security group ID
-       const securityGroupID = parseInt(result[0].id)
+       const securityGroupID = parseInt(result[0].id);
        if(securityGroupID === undefined || securityGroupID <= 0) {
            throw "Unable to find security group from the supplied parameters.";
+       }
+
+       // Check that the access level of the logged in user is able to perform the action
+       const accessLevel = parseInt(result[0].access_level); // 1
+       const groupTitle = result[0].title;
+
+       if(accessLevel < session.GetData().user.security_group) {
+           throw "Your account doesn't have access to create users in the " + groupTitle + " group!";
        }
 
        // Encrypt the password before storing in the database
@@ -119,7 +129,7 @@ async function CreateUser (session, params) {
            VALUES (${email}, ${hash}, ${firstName}, ${lastName}, ${phoneNumber}, ${jobTitle}, ${securityGroupID}, NOW(), ${session.GetData().user.email}, NOW(), ${session.GetData().user.email})
        `)
 
-       return JSON.parse(`{ "success": true, "result": "${result}" }`);
+       return JSON.parse(`{ "success": true, "result": ${JSON.stringify(result)} }`);
    }
    catch (err) {
        return JSON.parse(`{ "success": false, "message": "${err}"}`);
