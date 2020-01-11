@@ -1,68 +1,22 @@
 const db = require('../../../lib/db');
 const escape = require('sql-template-strings');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
-
-async function VerifyUser(req, res, groups) {
-    try {
-        let user = {};
-        let userHasPermissions = false;
-        console.log(userHasPermissions);
-
-        // Check if a valid user token was provided
-        const token = await req.headers.token;
-        if(token === undefined || token == "") {
-            throw "Token is undefined or empty."
-        }
-        
-        // Store the payload data if a valid token is provided
-        const cert = fs.readFileSync('./public.key', 'utf8');
-        jwt.verify(token, cert, { algorithms: ['RS256'] }, function(err, payload) {
-            if(err) {
-                throw err.message;
-            } else {
-                user = payload;
-            }
-        });
-
-        // Retrieve the name of the security group the user belongs to
-        let result = await db.query(escape`
-            SELECT title
-            FROM security_group
-            WHERE id = ${user.data[0].security_group}
-        `)
-
-        // Check if the user belongs to a group allowed to create users
-        const createdBySecurityGroup = result[0].title
-        for(let i = 0; i < groups.length; ++i) {
-            if(createdBySecurityGroup === groups[i]) {
-                userHasPermissions = true;
-                break;
-            }
-        }
-
-        // Only continue if the user has a valid token and permissions to create users.
-        if(!userHasPermissions) {
-            throw "You don't have sufficient privileges."
-        }
-    }
-    catch (err) {
-        res.status(401).json({ success: false, message: err });
-        return false;
-    }
-
-    return true;
-}
+const User = require('../../../lib/user');
 
 module.exports = async(req, res) => {
+    // Stores an array of groups allowed to perform the HTTP request submitted
     let allowedGroups = [];
+
+    // Create a new user object and store their log in token to verify they can perform the HTTP request submitted
+    const token = await req.headers.token;
+    let userSignedIn = new User.User(token);
+    userSignedIn.SignIn();
 
     switch(req.method) {
         case 'GET':
-            // Verify the user's token and that they belong to the appropriate group(s)
+            // Verify the user can perform the action requested
             allowedGroups = ["Administrator", "Lead", "Technician", "Read Only"];
-            let canGetUsers = await VerifyUser(req, res, allowedGroups);
+            const canGetUsers = await userSignedIn.CheckPermissions(req, res, allowedGroups);
             if(!canGetUsers) break;
 
             // Get the limit parameters to reduce payload size
@@ -93,9 +47,9 @@ module.exports = async(req, res) => {
             break;
 
         case 'POST':
-            // Verify the user
+            // Verify that the user can perform the action requested
             allowedGroups = ["Administrator", "Lead"];
-            canCreateUser = await VerifyUser(req, res, allowedGroups);
+            const canCreateUser = await userSignedIn.CheckPermissions(req, res, allowedGroups);
             if(!canCreateUser) break;
 
             // Required parameters
@@ -153,7 +107,7 @@ module.exports = async(req, res) => {
             // Insert the new user into the database
             result = await db.query(escape`
                 INSERT INTO user (email, password, first_name, last_name, phone_number, job_title, security_group, created_at, created_by, last_updated_at, last_updated_by)
-                VALUES (${email}, ${hash}, ${firstName}, ${lastName}, ${phoneNumber}, ${jobTitle}, ${securityGroupID}, NOW(), ${user.data[0].email}, NOW(), ${user.data[0].email})
+                VALUES (${email}, ${hash}, ${firstName}, ${lastName}, ${phoneNumber}, ${jobTitle}, ${securityGroupID}, NOW(), ${userSignedIn.data.user.email}, NOW(), ${userSignedIn.data.user.email})
             `)
 
             res.status(200).json({ success: true, result });
