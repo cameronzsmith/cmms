@@ -26,9 +26,9 @@
               
                 
                 <li><a
-                  href='#session'
+                  href='#connection'
                   class=" toggle-sibling">
-                  Session
+                  Connection
                   <span class='icon'>▸</span>
                 </a>
                 
@@ -39,30 +39,58 @@
                       <li class='h5'><span>Instance members</span></li>
                       
                       <li><a
-                        href='#sessiongetdata'
+                        href='#connectiongetdata'
                         class='regular pre-open'>
                         #GetData
                       </a></li>
                       
                       <li><a
-                        href='#sessionsetdata'
+                        href='#connectionsetdata'
                         class='regular pre-open'>
                         #SetData
                       </a></li>
                       
                       <li><a
-                        href='#sessionsignin'
+                        href='#connectionlogin'
                         class='regular pre-open'>
-                        #SignIn
+                        #Login
                       </a></li>
                       
                       <li><a
-                        href='#sessioncheckpermissions'
+                        href='#connectioncheckpermissions'
                         class='regular pre-open'>
                         #CheckPermissions
                       </a></li>
                       
                     </ul>
+                  
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#authentication'
+                  class=" toggle-sibling">
+                  Authentication
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  <ul class='list-reset py1-ul pl1'>
+                    <li class='h5'><span>Static members</span></li>
+                    
+                      <li><a
+                        href='#authenticationlogin'
+                        class='regular pre-open'>
+                        .Login
+                      </a></li>
+                    
+                    </ul>
+                  
                   
                   
                   
@@ -119,8 +147,8 @@
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='session'>
-      Session
+    <h3 class='fl m0' id='connection'>
+      Connection
     </h3>
     
     
@@ -128,7 +156,7 @@
   
 
   
-    <div class='pre p1 fill-light mt0'>new Session(token: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</div>
+    <div class='pre p1 fill-light mt0'>new Connection(token: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</div>
   
   
 
@@ -168,7 +196,7 @@
     <div class='py1 quiet mt1 prose-big'>Instance Members</div>
     <div class="clearfix">
   
-    <div class='border-bottom' id='sessiongetdata'>
+    <div class='border-bottom' id='connectiongetdata'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -223,7 +251,7 @@
       </div>
     </div>
   
-    <div class='border-bottom' id='sessionsetdata'>
+    <div class='border-bottom' id='connectionsetdata'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -284,11 +312,11 @@
       </div>
     </div>
   
-    <div class='border-bottom' id='sessionsignin'>
+    <div class='border-bottom' id='connectionlogin'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>SignIn</span>
+            <span class='code strong strong truncate'>Login</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -298,7 +326,7 @@
 
   <p>This function ensures the user provided a valid session token.</p>
 
-    <div class='pre p1 fill-light mt0'>SignIn</div>
+    <div class='pre p1 fill-light mt0'>Login</div>
   
   
 
@@ -339,7 +367,7 @@
       </div>
     </div>
   
-    <div class='border-bottom' id='sessioncheckpermissions'>
+    <div class='border-bottom' id='connectioncheckpermissions'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -425,6 +453,137 @@
   
   <div class='clearfix'>
     
+    <h3 class='fl m0' id='authentication'>
+      Authentication
+    </h3>
+    
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>Authentication</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Static Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='authenticationlogin'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>new Login(req, res)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>This function authenticates the username and password sent in the req parameter and returns a session token.</p>
+
+    <div class='pre p1 fill-light mt0'>new Login(req: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, res: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>req</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    HTTP Request
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>res</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    HTTP Response
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>:
+        Returns a session token with the creation and expiration times.
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
     <h3 class='fl m0' id='user'>
       User
     </h3>
@@ -473,7 +632,7 @@
 
   <p>Retrieves the entire list of users.</p>
 
-    <div class='pre p1 fill-light mt0'>new GetAllUsers(session: <a href="#session">Session</a>, params: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
+    <div class='pre p1 fill-light mt0'>new GetAllUsers(session: <a href="#connection">Connection</a>, params: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
   
   
 
@@ -490,8 +649,8 @@
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>session</span> <code class='quiet'>(<a href="#session">Session</a>)</code>
-	    Session object which contains authenticated user payload.
+            <span class='code bold'>session</span> <code class='quiet'>(<a href="#connection">Connection</a>)</code>
+	    Connection object which contains authenticated user payload.
 
           </div>
           
@@ -551,7 +710,7 @@
 
   <p>Creates a new user and returns the newly created user data.</p>
 
-    <div class='pre p1 fill-light mt0'>new CreateUser(session: <a href="#session">Session</a>, params: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
+    <div class='pre p1 fill-light mt0'>new CreateUser(session: Session, params: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
   
   
 
@@ -568,7 +727,7 @@
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>session</span> <code class='quiet'>(<a href="#session">Session</a>)</code>
+            <span class='code bold'>session</span> <code class='quiet'>(Session)</code>
 	    Session object which contains authenticated user payload.
 
           </div>

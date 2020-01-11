@@ -3,21 +3,19 @@ const jwt = require("jsonwebtoken");
 const db = require('./db');
 const escape = require('sql-template-strings');
 
-/** @module Authentication */
-
 /** 
- * @class Session
- * This is the API Session class. It will log the user in, store their token, and store all of the routes that require an authorized API session.
+ * @class Connection
+ * @classdesc This class helps authenticate the user's session token and helps verify the user has the appropriate access.
  * @param {string} token
  */
-class Session {
+class Connection {
     constructor(token) {
         this.token = token;
         this.data = {};
 
-        this.SignIn();
+        this.Login();
     }
-    /** @lends Session */
+    /** @lends Connection */
     
     /**
      * This function retrieves the logged in user data (assuming they have been logged in)
@@ -39,7 +37,7 @@ class Session {
      * This function ensures the user provided a valid session token.
      * @returns {Object} Returns success status and the user data payload. If the user data can't be authenticated, an error message is returned instead of the payload.
      */
-    SignIn = function() {
+    Login = function() {
         try {
             // Check if a valid user token was provided
             if(this.token === undefined || this.token == "") {
@@ -104,4 +102,4 @@ class Session {
     }
 }
 
-exports.Session = Session;
+exports.Connection = Connection;

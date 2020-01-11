@@ -8,10 +8,9 @@ const db = require('../lib/db');
 /**
  * Retrieves the entire list of users.
  * @memberof User
- * @param {Session} session Session object which contains authenticated user payload.
+ * @param {Connection} session Connection object which contains authenticated user payload.
  * @param {Object} params Parameter object from the HTTP request.
  * @returns {Object} If a valid session token is provided, it will return a list of users, the count of users, the total amount of pages the user list consumes, and the current page number.
- * @static
  */
 async function GetAllUsers (session, params) {
     try {
@@ -57,7 +56,6 @@ async function GetAllUsers (session, params) {
 * @param {Session} session Session object which contains authenticated user payload.
 * @param {Object} params Parameter object from the HTTP request
 * @returns {Object} Returns success status and the user object. If unsuccessful, an error message is returned instead of the user object.
-* @static
 */
 async function CreateUser (session, params) {
    try {
