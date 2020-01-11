@@ -1,23 +1,30 @@
 const db = require('../../../lib/db');
 const escape = require('sql-template-strings');
 const bcrypt = require('bcryptjs');
-const User = require('../../../lib/user');
+const UserSession = require('../../../lib/user');
 
 module.exports = async(req, res) => {
     // Stores an array of groups allowed to perform the HTTP request submitted
     let allowedGroups = [];
 
-    // Create a new user object and store their log in token to verify they can perform the HTTP request submitted
+    // Get the token to authorize the user
     const token = await req.headers.token;
-    let userSignedIn = new User.User(token);
-    userSignedIn.SignIn();
+    
+    // Create a new user session and store their data
+    let user = new UserSession.User(token);
+    user.setData(user.SignIn());
 
+    // If the user can't be signed in, return an error
+    if(user.getData().success == false) {
+        res.status(401).json(user.getData());
+    }
+    
     switch(req.method) {
         case 'GET':
             // Verify the user can perform the action requested
             allowedGroups = ["Administrator", "Lead", "Technician", "Read Only"];
-            const canGetUsers = await userSignedIn.CheckPermissions(req, res, allowedGroups);
-            if(!canGetUsers) break;
+            const canGetUsers = await user.CheckPermissions(allowedGroups);
+            if(!canGetUsers.success) break;
 
             // Get the limit parameters to reduce payload size
             let page = parseInt(req.query.page) || 1
@@ -49,8 +56,8 @@ module.exports = async(req, res) => {
         case 'POST':
             // Verify that the user can perform the action requested
             allowedGroups = ["Administrator", "Lead"];
-            const canCreateUser = await userSignedIn.CheckPermissions(req, res, allowedGroups);
-            if(!canCreateUser) break;
+            const canCreateUser = await user.CheckPermissions(allowedGroups);
+            if(!canCreateUser.success) break;
 
             // Required parameters
             let password = req.query.password
@@ -107,7 +114,7 @@ module.exports = async(req, res) => {
             // Insert the new user into the database
             result = await db.query(escape`
                 INSERT INTO user (email, password, first_name, last_name, phone_number, job_title, security_group, created_at, created_by, last_updated_at, last_updated_by)
-                VALUES (${email}, ${hash}, ${firstName}, ${lastName}, ${phoneNumber}, ${jobTitle}, ${securityGroupID}, NOW(), ${userSignedIn.data.user.email}, NOW(), ${userSignedIn.data.user.email})
+                VALUES (${email}, ${hash}, ${firstName}, ${lastName}, ${phoneNumber}, ${jobTitle}, ${securityGroupID}, NOW(), ${user.getData().user.email}, NOW(), ${user.getData().user.email})
             `)
 
             res.status(200).json({ success: true, result });
