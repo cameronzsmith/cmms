@@ -1,22 +1,19 @@
 const Session = require('../../../lib/session');
 const User = require('../../../routes/user');
 
-module.exports = async(req, res) => {     
-     // Create a new auth session from the header supplied session token
-     const session = new Session.Connection(await req.headers.token);
-     const params = req.query;
+module.exports = async (req, res) => {
+    const session = new Session.Connection(await req.headers.token);
+    const params = req.query;
 
-     // Store the user data, returning an error if the user couldn't be authenticated
-     if(session.GetData().success == false) {
-         return res.status(401).json(session.GetData());
-     }
+    const authenticated = session.Login();
+    if(!authenticated.success) {
+        return res.json(authenticated);
+    }
 
-     switch(req.method) {
-         // Get All Users
+    switch(req.method) {
         case 'GET':
-            res.json(await User.GetAllUsers(session, params));
+            res.json(await User.GetAllUsers(params));
             break;
-        // Create A New User
         case 'POST':
             res.json(await User.CreateUser(session, params));
             break;

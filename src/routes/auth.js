@@ -33,9 +33,25 @@ async function Login(req, res) {
         
         // After checking that we've received valid parameters, query the database for the supplied email address to compare the password and to store the payload
         const user = await db.query(escape`
-            SELECT *
+            SELECT 
+                user.id,
+                user.email,
+                user.password,
+                user.first_name,
+                user.last_name,
+                user.phone_number,
+                user.job_title,
+                user.security_group_id,
+                security_group.title AS security_group,
+                security_group.access_level,
+                user.date_of_last_login,
+                user.created_at,
+                user.created_by,
+                user.last_updated_at,
+                user.last_updated_by
             FROM user
-            WHERE email = ${email}
+            INNER JOIN security_group ON user.security_group_id = security_group.id
+            WHERE user.email = ${email}
         `)
 
         // Compare the password provided in the POST request with the password of the user supplied

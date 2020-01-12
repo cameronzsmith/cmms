@@ -1,24 +1,63 @@
 const bcrypt = require('bcryptjs');
-const escape = require('sql-template-strings');
-
+const moment = require('moment');
 const db = require('../lib/db');
+const escape = require('sql-template-strings');
+const Security = require('../lib/security');
 
 /** @module User */
 
 /**
+ * Gets the user from the passed in user ID.
+ * @memberof User
+ * @param {Object} params Parameter object from the HTTP request.
+ * @returns {Object} Return the success status and the user data, or if an error is found, it will return the error message.
+ */
+async function GetUser(params) {
+    try {        
+        
+        // Verify the user entered the required parameters
+        const userID = parseInt(params.id);
+        if(userID === undefined || userID <= 0) {
+            throw "You must provide a User ID.";
+        }
+
+        // Retrieve the user information from the supplied UserID
+        const [user] = await db.query(escape`
+            SELECT 
+                user.id, 
+                user.email, 
+                user.first_name, 
+                user.last_name, 
+                user.phone_number, 
+                user.job_title, 
+                security_group.title AS security_group,
+                user.security_group_id,
+                security_group.access_level,
+                user.date_of_last_login, 
+                user.created_at, 
+                user.created_by, 
+                user.last_updated_at, 
+                user.last_updated_by
+            FROM user
+            INNER JOIN security_group ON user.security_group_id = security_group.id
+            WHERE user.id = ${userID}
+        `)
+
+        return JSON.parse(`{ "success": true, "result": ${JSON.stringify(user)} }`);
+    }
+    catch(err) {
+        return JSON.parse(`{ "success": false, "message": "${err}"}`);
+    }
+}
+
+/**
  * Retrieves the entire list of users.
  * @memberof User
- * @param {Connection} session Connection object which contains authenticated user payload.
  * @param {Object} params Parameter object from the HTTP request.
- * @returns {Object} If a valid session token is provided, it will return a list of users, the count of users, the total amount of pages the user list consumes, and the current page number.
+ * @returns {Object} Returns success status, and result object with user data, the amount of users, and pagination info.
  */
-async function GetAllUsers (session, params) {
+async function GetAllUsers (params) {
     try {
-        // Verify the user can perform the action requested
-        const allowedGroups = ["Administrator", "Lead", "Technician", "Read Only"];
-        const canGetUsers = await session.CheckPermissions(allowedGroups);
-        if(!canGetUsers.success) throw canGetUsers.message;
-
         // Get the limit parameters to reduce payload size
         let page = parseInt(params.page) || 1
         const limit = parseInt(params.limit) || 9
@@ -26,9 +65,24 @@ async function GetAllUsers (session, params) {
         
         // Query for the user information
         const users = await db.query(escape`
-            SELECT id, email, first_name, last_name, phone_number, job_title, security_group, date_of_last_login, created_at, created_by, last_updated_at, last_updated_by
+            SELECT 
+                user.id, 
+                user.email, 
+                user.first_name, 
+                user.last_name, 
+                user.phone_number, 
+                user.job_title, 
+                security_group.title AS security_group,
+                user.security_group_id,
+                security_group.access_level,
+                user.date_of_last_login, 
+                user.created_at, 
+                user.created_by, 
+                user.last_updated_at, 
+                user.last_updated_by
             FROM user
-            ORDER BY first_name
+            INNER JOIN security_group ON user.security_group_id = security_group.id
+            ORDER BY user.first_name
             LIMIT ${(page - 1) * limit}, ${limit}
         `)
         
@@ -61,8 +115,11 @@ async function CreateUser (session, params) {
    try {
        // Verify that the user can perform the action requested
        const allowedGroups = ["Administrator", "Lead"];
-       const canCreateUser = await session.CheckPermissions(allowedGroups);
+       const canCreateUser = await Security.CheckPermissions(session, allowedGroups);
        if(!canCreateUser.success) throw canCreateUser.message;
+
+       const hasAccess = await Security.CheckAccessLevel(session, params.securityGroup);
+       if(!hasAccess.success) throw hasAccess.message;
 
        // Required parameters
        let password = params.password
@@ -97,7 +154,7 @@ async function CreateUser (session, params) {
        }
 
        // Retrieves the security group ID using the parameter supplied
-       result = await db.query(escape`
+       let result = await db.query(escape`
            SELECT id, title, access_level
            FROM security_group
            WHERE title = ${securityGroup}
@@ -109,22 +166,15 @@ async function CreateUser (session, params) {
            throw "Unable to find security group from the supplied parameters.";
        }
 
-       // Check that the access level of the logged in user is able to perform the action
-       const accessLevel = parseInt(result[0].access_level); // 1
-       const groupTitle = result[0].title;
-
-       if(accessLevel < session.GetData().user.security_group) {
-           throw "Your account doesn't have access to create users in the " + groupTitle + " group!";
-       }
-
        // Encrypt the password before storing in the database
-       let salt = bcrypt.genSaltSync(10);
-       let hash = bcrypt.hashSync(password, salt);
+       const salt = bcrypt.genSaltSync(10);
+       const hash = bcrypt.hashSync(password, salt);
 
        // Insert the new user into the database
+       const now = moment().format();
        result = await db.query(escape`
-           INSERT INTO user (email, password, first_name, last_name, phone_number, job_title, security_group, created_at, created_by, last_updated_at, last_updated_by)
-           VALUES (${email}, ${hash}, ${firstName}, ${lastName}, ${phoneNumber}, ${jobTitle}, ${securityGroupID}, NOW(), ${session.GetData().user.email}, NOW(), ${session.GetData().user.email})
+           INSERT INTO user (email, password, first_name, last_name, phone_number, job_title, security_group_id, created_at, created_by, last_updated_at, last_updated_by)
+           VALUES (${email}, ${hash}, ${firstName}, ${lastName}, ${phoneNumber}, ${jobTitle}, ${securityGroupID}, ${now}, ${session.GetData().user.email}, ${now}, ${session.GetData().user.email})
        `)
 
        return JSON.parse(`{ "success": true, "result": ${JSON.stringify(result)} }`);
@@ -134,5 +184,76 @@ async function CreateUser (session, params) {
    }
 }
 
+/**
+ * Update a specific user.
+ * @memberof User
+ * @param {Connection} session Session object which contains authenticated user payload
+ * @param {Object} params Parameter object from the HTTP request
+ * @returns {Object} Returns success status and the result of the update query.
+ */
+async function UpdateUser (session, params) {
+    try {
+        // Set the groups allowed to perform this action
+        const allowedGroups = ["Administrator", "Lead"];
+        const canUpdateUser = await Security.CheckPermissions(session, allowedGroups);
+        if(!canUpdateUser.success) throw canUpdateUser.message;
+
+        // Check that the user ID the user wants to update is valid
+        const userID = parseInt(params.id);
+        if(userID === undefined || userID <= 0) throw "You must supply a valid User ID";
+
+        // Get the security group of the user that's being updated to make sure the account has sufficient privileges.
+        const user = await this.GetUser(params);
+        if(!user.success) throw user.message;
+
+        // If the parameter wasn't supplied, use the old user data.
+        const email = (params.email === undefined) ? user.result.email : params.email;
+        const securityGroup = (params.securityGroup === undefined) ? user.result.security_group : params.securityGroup;
+        const firstName = (params.firstName === undefined) ? user.result.first_name : params.firstName;
+        const lastName = (params.lastName === undefined) ? user.result.last_name : params.lastName;
+        const phoneNumber = (params.phoneNumber === undefined) ? user.result.phone_number : params.phoneNumber;
+        const jobTitle = (params.jobTitle === undefined) ? user.result.job_title : params.jobTitle;
+
+        // Check if the authenticated user is trying to set an account to a group above their level
+        const hasAccess = await Security.CheckAccessLevel(session, securityGroup);
+        if(!hasAccess.success) throw hasAccess.message;
+
+        // Check if the authenticated user is trying to update an account that belongs to a group above their level
+        const userLocked = await Security.CheckAccessLevel(session, user.result.security_group);
+        if(!userLocked.success) throw userLocked.message;
+
+        // If the user isn't removing the email address, check that they're using a unique email address.
+        if(email !== null && email != user.result.email) {
+            const duplicateEmailCount = await db.query(escape`
+                SELECT COUNT(*)
+                FROM user
+                WHERE email = ${email}
+            `)
+
+            const newEmailExists = (duplicateEmailCount[0]["COUNT(*)"] > 0) ? true : false;
+            if(newEmailExists) throw "Email supplied is already in use!";
+        }
+
+        // Check if the user provided a valid Security Group
+        const securityGroupID = await Security.GetSecurityGroupID(securityGroup);
+        if(!securityGroupID.success) throw securityGroupID.message;
+        
+        //  Update the user from the supplied parameters
+        const now = moment().format();
+        result = await db.query(escape`
+            UPDATE user
+            SET email = ${email}, security_group_id = ${securityGroupID.result.id}, first_name = ${firstName}, last_name = ${lastName}, phone_number = ${phoneNumber}, job_title = ${jobTitle}, last_updated_at = ${now}, last_updated_by = ${session.GetData().user.email}
+            WHERE id = ${userID}
+        `);
+
+        return JSON.parse(`{ "success": true, "result": ${JSON.stringify(result)}}`);
+    }
+    catch(err) {
+        return JSON.parse(`{ "success": false, "message": "${err}"}`);
+    }
+}
+
+exports.GetUser = GetUser;
 exports.GetAllUsers = GetAllUsers;
 exports.CreateUser = CreateUser;
+exports.UpdateUser = UpdateUser;
