@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
 
     switch(req.method) {
         case 'GET':
-            res.json(await User.GetUser(params));
+            res.json(await User.GetUser(params.id));
             break;
         case 'PATCH':
             res.json(await User.UpdateUser(session, params));

@@ -12,9 +12,8 @@ const API = require('../../lib/api');
  * @param {Object} params Parameter object from the HTTP request.
  * @returns {Object} Returns the success status, and if successful, the project data.
  */
-async function GetProject(params) {
+async function GetProject(id) {
     try {
-        const id = parseInt(params.id);
         const sql = escape`
             SELECT
                 id,

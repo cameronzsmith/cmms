@@ -8,15 +8,13 @@ const API = require('../../lib/api');
 /** @module User */
 
 /**
- * Gets the user from the passed in user ID.
+ * Gets a specific user from the supplied ID parameter.
  * @memberof User
- * @param {Object} params Parameter object from the HTTP request.
+ * @param {Number} id The ID supplied in the request parameters.
  * @returns {Object} Return the success status and the user data, or if an error is found, it will return the error message.
  */
-async function GetUser(params) {
+async function GetUser(id) {
     try {        
-        // Verify the ID was supplied
-        const id = parseInt(params.id);
         const sql = escape`
             SELECT 
                 user.id, 
