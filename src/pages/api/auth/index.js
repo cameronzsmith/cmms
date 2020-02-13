@@ -1,4 +1,4 @@
-const Auth = require('../../../routes/auth');
+const Auth = require('../../../routes/api/auth');
 
 module.exports = async(req, res) => {
     switch(req.method) {

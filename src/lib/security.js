@@ -18,6 +18,7 @@ async function GetSecurityGroup (securityGroupID) {
             FROM security_group
             WHERE id = ${securityGroupID}
         `);
+        
         if(group === undefined) throw "Unable to retrieve security group";
 
         return JSON.parse(`{"success": false, "result": "${JSON.stringify(group)}"}`);
@@ -89,7 +90,7 @@ async function CheckPermissions (session, groupsAllowed) {
 async function CheckAccessLevel (session, securityGroup) {
     try {
         // Retrieves the security group ID using the parameter supplied
-        const [result] = await db.query(escape`
+        const result = await db.query(escape`
             SELECT id, access_level
             FROM security_group
             WHERE title = ${securityGroup}

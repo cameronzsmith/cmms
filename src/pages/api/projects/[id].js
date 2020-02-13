@@ -1,5 +1,5 @@
 const Session = require('../../../lib/session');
-const User = require('../../../routes/api/user');
+const Project = require('../../../routes/api/project');
 
 module.exports = async (req, res) => {
     const session = new Session.Connection(await req.headers.token);
@@ -12,11 +12,11 @@ module.exports = async (req, res) => {
 
     switch(req.method) {
         case 'GET':
-            res.json(await User.GetUser(params));
+            res.json(await Project.GetProject(params));
             break;
-        case 'PATCH':
-            res.json(await User.UpdateUser(session, params));
-            break;
+        // case 'PATCH':
+        //     res.json(await User.UpdateUser(session, params));
+        //     break;
         default:
             res.status(405).end();
             break;

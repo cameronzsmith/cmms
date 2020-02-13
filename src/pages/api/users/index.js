@@ -1,5 +1,5 @@
 const Session = require('../../../lib/session');
-const User = require('../../../routes/user');
+const User = require('../../../routes/api/user');
 
 module.exports = async (req, res) => {
     const session = new Session.Connection(await req.headers.token);

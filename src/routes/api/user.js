@@ -1,8 +1,9 @@
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
-const db = require('../lib/db');
+const db = require('../../lib/db');
 const escape = require('sql-template-strings');
-const Security = require('../lib/security');
+const Security = require('../../lib/security');
+const API = require('../../lib/api');
 
 /** @module User */
 
@@ -14,15 +15,9 @@ const Security = require('../lib/security');
  */
 async function GetUser(params) {
     try {        
-        
-        // Verify the user entered the required parameters
-        const userID = parseInt(params.id);
-        if(userID === undefined || userID <= 0) {
-            throw "You must provide a User ID.";
-        }
-
-        // Retrieve the user information from the supplied UserID
-        const [user] = await db.query(escape`
+        // Verify the ID was supplied
+        const id = parseInt(params.id);
+        const sql = escape`
             SELECT 
                 user.id, 
                 user.email, 
@@ -33,17 +28,17 @@ async function GetUser(params) {
                 security_group.title AS security_group,
                 user.security_group_id,
                 security_group.access_level,
-                user.date_of_last_login, 
+                user.last_login, 
                 user.created_at, 
                 user.created_by, 
                 user.last_updated_at, 
                 user.last_updated_by
             FROM user
             INNER JOIN security_group ON user.security_group_id = security_group.id
-            WHERE user.id = ${userID}
-        `)
+            WHERE user.id = ${id}
+        `;
 
-        return JSON.parse(`{ "success": true, "result": ${JSON.stringify(user)} }`);
+        return await API.GetSpecific(id, sql);
     }
     catch(err) {
         return JSON.parse(`{ "success": false, "message": "${err}"}`);
@@ -75,7 +70,7 @@ async function GetAllUsers (params) {
                 security_group.title AS security_group,
                 user.security_group_id,
                 security_group.access_level,
-                user.date_of_last_login, 
+                user.last_login, 
                 user.created_at, 
                 user.created_by, 
                 user.last_updated_at, 
@@ -173,11 +168,37 @@ async function CreateUser (session, params) {
        // Insert the new user into the database
        const now = moment().format();
        result = await db.query(escape`
-           INSERT INTO user (email, password, first_name, last_name, phone_number, job_title, security_group_id, created_at, created_by, last_updated_at, last_updated_by)
-           VALUES (${email}, ${hash}, ${firstName}, ${lastName}, ${phoneNumber}, ${jobTitle}, ${securityGroupID}, ${now}, ${session.GetData().user.email}, ${now}, ${session.GetData().user.email})
+           INSERT INTO user (
+               email, 
+               password,
+               first_name, 
+               last_name, 
+               phone_number, 
+               job_title, 
+               security_group_id, 
+               created_at, 
+               created_by, 
+               last_updated_at, 
+               last_updated_by
+            )
+           VALUES (
+                ${email},
+                ${hash}, 
+                ${firstName}, 
+                ${lastName}, 
+                ${phoneNumber}, 
+                ${jobTitle}, 
+                ${securityGroupID}, 
+                ${now}, 
+                ${session.GetData().user.email}, 
+                ${now}, 
+                ${session.GetData().user.email}
+            );
        `)
 
-       return JSON.parse(`{ "success": true, "result": ${JSON.stringify(result)} }`);
+       if(result.error) throw "#" + result.error.errno + " " + result.error.sqlMessage;
+
+       return JSON.parse(`{ "success": true, "result": ${JSON.stringify({email, first_name: firstName, last_name: lastName, phone_number: phoneNumber, job_title: jobTitle, security_group: securityGroup, created_at: now, last_updated_at: now})} }`);
    }
    catch (err) {
        return JSON.parse(`{ "success": false, "message": "${err}"}`);

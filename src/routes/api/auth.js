@@ -1,5 +1,5 @@
 
-const db = require("../lib/db");
+const db = require("../../lib/db");
 const escape = require('sql-template-strings');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -27,7 +27,8 @@ async function Login(req, res) {
         const passwordBlank = (password === undefined || password === "") ? true : false;
 
         if(emailBlank || passwordBlank) {
-            const returnMsg = `You must provide ${(emailBlank) ? "an email address" : ""}${(emailBlank && passwordBlank) ? " and " : ""}${(passwordBlank) ? "a password" : ""}`;
+            // TODO: Check if this return message is valid
+            // const returnMsg = `You must provide ${(emailBlank) ? "an email address" : ""}${(emailBlank && passwordBlank) ? " and " : ""}${(passwordBlank) ? "a password" : ""}`;
             throw "You must provide an email address and a password!";
         }
         
@@ -44,7 +45,7 @@ async function Login(req, res) {
                 user.security_group_id,
                 security_group.title AS security_group,
                 security_group.access_level,
-                user.date_of_last_login,
+                user.last_login,
                 user.created_at,
                 user.created_by,
                 user.last_updated_at,
@@ -52,18 +53,28 @@ async function Login(req, res) {
             FROM user
             INNER JOIN security_group ON user.security_group_id = security_group.id
             WHERE user.email = ${email}
-        `)
+        `);
 
         // Compare the password provided in the POST request with the password of the user supplied
         const match = await bcrypt.compare(password, user[0].password);
-        if(match) {        
+        if(match) {
+             // Get the current date & time, and the expiration time (1 hour from current time)
+            const currentTime = moment().format();
+            const expiresAt = moment().hour(moment().hour() + 1).format();
+
+            // Update the last login of the user
+            await db.query(escape`
+                UPDATE user
+                SET last_login = ${currentTime}
+                WHERE user.email = ${email}
+            `);
+
             // Use JWT to sign a user token that expires after 1 hour
             const privateKey = fs.readFileSync('./src/private.key', 'utf8');
             jwt.sign({ data: user }, privateKey, { algorithm: 'RS256', expiresIn: "1h" }, (err, token) => {
                 if (err) throw err;
-                let createdAt = moment().format();
-                let expiresAt = moment().hour(moment().hour() + 1).format();
-                res.json({success: true, token: {sessionToken: token, createdAt, expiresAt}});
+                
+                res.json({success: true, token: {sessionToken: token, createdAt: currentTime, expiresAt}});
             });
         } else {
             throw "Unable to authenticate user."

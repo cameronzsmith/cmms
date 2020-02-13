@@ -1,7 +1,5 @@
 const fs = require('fs');
 const jwt = require("jsonwebtoken");
-const db = require('./db');
-const escape = require('sql-template-strings');
 
 /** 
  * @class Connection
