@@ -38,9 +38,9 @@
                     <li class='h5'><span>Static members</span></li>
                     
                       <li><a
-                        href='#apigetspecific'
+                        href='#apiget'
                         class='regular pre-open'>
-                        .GetSpecific
+                        .Get
                       </a></li>
                     
                     </ul>
@@ -289,11 +289,11 @@
     <div class='py1 quiet mt1 prose-big'>Static Members</div>
     <div class="clearfix">
   
-    <div class='border-bottom' id='apigetspecific'>
+    <div class='border-bottom' id='apiget'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>new GetSpecific(id, sql)</span>
+            <span class='code strong strong truncate'>new Get(id, sql)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -301,9 +301,9 @@
 
   
 
-  <p>Performs a GET request with the ID supplied in the URL.</p>
+  <p>Gets a specific record from the supplied ID. Returns the data found from the SQL query if successful.</p>
 
-    <div class='pre p1 fill-light mt0'>new GetSpecific(id: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>, sql: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
+    <div class='pre p1 fill-light mt0'>new Get(id: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>, sql: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
   
   
 
@@ -1131,7 +1131,7 @@
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>new GetProject(params)</span>
+            <span class='code strong strong truncate'>new GetProject(id)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1139,9 +1139,9 @@
 
   
 
-  <p>Gets the project from the passed in project ID.</p>
+  <p>Gets a specific project from the supplied ID.</p>
 
-    <div class='pre p1 fill-light mt0'>new GetProject(params: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
+    <div class='pre p1 fill-light mt0'>new GetProject(id: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
   
   
 
@@ -1158,8 +1158,8 @@
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>params</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    Parameter object from the HTTP request.
+            <span class='code bold'>id</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>)</code>
+	    The ID to look up.
 
           </div>
           
@@ -1174,7 +1174,7 @@
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
       <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>:
-        Returns the success status, and if successful, the project data.
+        Returns the Project data if successful.
 
       
     
@@ -1253,7 +1253,7 @@
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>new GetUser(params)</span>
+            <span class='code strong strong truncate'>new GetUser(id)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1261,9 +1261,9 @@
 
   
 
-  <p>Gets the user from the passed in user ID.</p>
+  <p>Gets a specific user from the supplied ID.</p>
 
-    <div class='pre p1 fill-light mt0'>new GetUser(params: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
+    <div class='pre p1 fill-light mt0'>new GetUser(id: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
   
   
 
@@ -1280,8 +1280,8 @@
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>params</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    Parameter object from the HTTP request.
+            <span class='code bold'>id</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>)</code>
+	    The ID supplied in the request parameters.
 
           </div>
           
@@ -1296,7 +1296,7 @@
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
       <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>:
-        Return the success status and the user data, or if an error is found, it will return the error message.
+        Returns the User data if successful.
 
       
     

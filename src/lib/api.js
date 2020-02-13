@@ -3,13 +3,13 @@ const db = require('./db');
 /** @module API */
 
 /**
- * Performs a GET request with the ID supplied in the URL.
+ * Gets a specific record from the supplied ID. Returns the data found from the SQL query if successful.
  * @memberof API
  * @param {Number} id The ID we wish to look up
  * @param {String} sql The SQL query to execute that's returned
  * @returns {Object} Returns the result of our SQL query from the supplied parameters.
  */
-async function GetSpecific(id, sql) {
+async function Get(id, sql) {
     try {
         if(isNaN(id) || id === undefined || id <= 0) {
             throw "No results found with the supplied ID!";
@@ -27,4 +27,4 @@ async function GetSpecific(id, sql) {
     }
 }
 
-exports.GetSpecific = GetSpecific;
+exports.Get = Get;

@@ -8,10 +8,10 @@ const API = require('../../lib/api');
 /** @module User */
 
 /**
- * Gets a specific user from the supplied ID parameter.
+ * Gets a specific user from the supplied ID.
  * @memberof User
  * @param {Number} id The ID supplied in the request parameters.
- * @returns {Object} Return the success status and the user data, or if an error is found, it will return the error message.
+ * @returns {Object} Returns the User data if successful.
  */
 async function GetUser(id) {
     try {        
@@ -36,7 +36,7 @@ async function GetUser(id) {
             WHERE user.id = ${id}
         `;
 
-        return await API.GetSpecific(id, sql);
+        return await API.Get(id, sql);
     }
     catch(err) {
         return JSON.parse(`{ "success": false, "message": "${err}"}`);

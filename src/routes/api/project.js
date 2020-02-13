@@ -7,10 +7,10 @@ const API = require('../../lib/api');
 /** @module Project */
 
 /**
- * Gets the project from the passed in project ID.
+ * Gets a specific project from the supplied ID.
  * @memberof Project
- * @param {Object} params Parameter object from the HTTP request.
- * @returns {Object} Returns the success status, and if successful, the project data.
+ * @param {Number} id The ID to look up.
+ * @returns {Object} Returns the Project data if successful.
  */
 async function GetProject(id) {
     try {
@@ -23,7 +23,7 @@ async function GetProject(id) {
             WHERE id = ${id}
         `;
 
-        return await API.GetSpecific(id, sql)
+        return await API.Get(id, sql)
     }
     catch(err) {
         return JSON.parse(`{ "success": false, "message": "${err}"}`);
