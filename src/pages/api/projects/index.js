@@ -12,10 +12,10 @@ module.exports = async (req, res) => {
 
     switch(req.method) {
         case 'GET':
-            res.json(await Project.GetProject(params.id));
+            res.json(await Project.GetAllProjects(params));
             break;
-        case 'PATCH':
-            res.json(await Project.UpdateProject(session, params));
+        case 'POST':
+            res.json(await Project.CreateProject(session, params));
             break;
         default:
             res.status(405).end();

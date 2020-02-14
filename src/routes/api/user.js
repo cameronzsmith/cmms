@@ -10,7 +10,7 @@ const API = require('../../lib/api');
 /**
  * Gets a specific user from the supplied ID.
  * @memberof User
- * @param {Number} id The ID supplied in the request parameters.
+ * @param {Number} id - The ID supplied in the request parameters.
  * @returns {Object} Returns the User data if successful.
  */
 async function GetUser(id) {
@@ -46,18 +46,13 @@ async function GetUser(id) {
 /**
  * Retrieves the entire list of users.
  * @memberof User
- * @param {Object} params Parameter object from the HTTP request.
+ * @param {Object} params - Parameter object from the HTTP request.
  * @returns {Object} Returns success status, and result object with user data, the amount of users, and pagination info.
  */
 async function GetAllUsers (params) {
     try {
-        // Get the limit parameters to reduce payload size
-        let page = parseInt(params.page) || 1
-        const limit = parseInt(params.limit) || 9
-        if (page < 1) page = 1
-        
         // Query for the user information
-        const users = await db.query(escape`
+        const sql = escape`
             SELECT 
                 user.id, 
                 user.email, 
@@ -76,21 +71,10 @@ async function GetAllUsers (params) {
             FROM user
             INNER JOIN security_group ON user.security_group_id = security_group.id
             ORDER BY user.first_name
-            LIMIT ${(page - 1) * limit}, ${limit}
-        `)
-        
-        // Get the count of the total users
-        const count = await db.query(escape`
-            SELECT COUNT(*)
-            AS userCount
-            FROM user
-        `)
+            
+        `;
 
-        // Store the summary values to return in response
-        const { userCount } = count[0]
-        const pageCount = Math.ceil(userCount / limit)
-
-        return JSON.parse(`{"success": true, "result": {"users": ${JSON.stringify(users)}, "userCount": ${userCount}, "pageCount": ${pageCount}, "page": ${page}}}`);
+        return API.GetAll(params, sql, "user");
     }
     catch (err) {
         return JSON.parse(`{"success": false, "message": "${err}"}`);
@@ -100,8 +84,8 @@ async function GetAllUsers (params) {
 /**
 * Creates a new user and returns the newly created user data.
 * @memberof User
-* @param {Session} session Session object which contains authenticated user payload.
-* @param {Object} params Parameter object from the HTTP request
+* @param {Connection} session - Connection object which contains authenticated user payload.
+* @param {Object} params - Parameter object from the HTTP request
 * @returns {Object} Returns success status and the user object. If unsuccessful, an error message is returned instead of the user object.
 */
 async function CreateUser (session, params) {
@@ -206,8 +190,8 @@ async function CreateUser (session, params) {
 /**
  * Update a specific user.
  * @memberof User
- * @param {Connection} session Session object which contains authenticated user payload
- * @param {Object} params Parameter object from the HTTP request
+ * @param {Connection} session - Connection object which contains authenticated user payload
+ * @param {Object} params - Parameter object from the HTTP request
  * @returns {Object} Returns success status and the result of the update query.
  */
 async function UpdateUser (session, params) {
@@ -222,7 +206,7 @@ async function UpdateUser (session, params) {
         if(userID === undefined || userID <= 0) throw "You must supply a valid User ID";
 
         // Get the security group of the user that's being updated to make sure the account has sufficient privileges.
-        const user = await this.GetUser(params);
+        const user = await this.GetUser(params.id);
         if(!user.success) throw user.message;
 
         // If the parameter wasn't supplied, use the old user data.
