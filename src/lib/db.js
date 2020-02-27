@@ -11,40 +11,16 @@ const db = mysql({
     onConnectError: (e) => {
         console.log("Unable to connect to the database.");
     },
-    onError: (e) => {
-        switch(e.code) {
-            case 'PROTOCOL_CONNECTION_LOST':
-                reconnect();
-                break;
-            default:
-                console.log("Error: " + e.code);
-                break;
-        }
+    onError: async (e) => {
+        if(e.code === "PROTOCOL_CONNECTION_LOST") {
+            console.log("Connection lost. Reconnecting...");
+            await db.quit();
+            await db.connect();
+        } else {
+            console.log("Error: " + e.code);
+        }        
     }
 })
-
-function reconnect() {
-    try {
-        const {
-            host, database, user, password,
-        } = db.config;
-        
-        this._connection = db.connect({
-            host,
-            database,
-            user,
-            password
-        })
-
-        this._connection.on("error", (error) => {
-            throw error;
-        });
-    }
-    catch(error) {
-        console.log("Error: " + error);
-        this.reconnect();
-    }
-}
 
 exports.query = async query => {
     try {
