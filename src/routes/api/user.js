@@ -100,7 +100,7 @@ async function CreateUser (session, params) {
         const settings = {
             session: session,
             database: { table: "user" },
-            security: { groups: ['Administrators', "Lead"] }
+            security: { groups: ['Administrator', "Lead"] }
         };
 
        return API.Create(data, settings);
@@ -134,7 +134,7 @@ async function UpdateUser (session, params) {
             id: params.id,
             session: session,
             database: { table: "user" },
-            security: { groups: ['Administrators', "Lead"] }
+            security: { groups: ['Administrator', "Lead"] }
         };
 
         const targetData = await this.GetUser(settings.id);

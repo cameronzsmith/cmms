@@ -73,15 +73,14 @@ async function Login(req, res) {
             const privateKey = fs.readFileSync('./src/private.key', 'utf8');
             jwt.sign({ data: user }, privateKey, { algorithm: 'RS256', expiresIn: "1h" }, (err, token) => {
                 if (err) throw err;
-                
-                res.json({success: true, token: {sessionToken: token, createdAt: currentTime, expiresAt}});
+                return res.json({success: true, token: {sessionToken: token, createdAt: currentTime, expiresAt}});
             });
         } else {
             throw "Unable to authenticate user."
         }
     }
     catch (err) {
-        res.json({success: false, message: err});
+        return res.json({success: false, message: err});
     }
 }
 

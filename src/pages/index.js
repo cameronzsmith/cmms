@@ -1,9 +1,9 @@
-require('dotenv').config()
+import Layout from '../components/layout';
 
-function Home() {
-    return <div>
-        Welcome to the CMMS application!
-    </div>
+export default function Index() {
+  return (
+    <Layout>
+      <p>Welcome to the CMMS application.</p>
+    </Layout>
+  );
 }
-
-export default Home

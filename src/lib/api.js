@@ -10,18 +10,45 @@ const Security = require('./security');
 /**
  * Checks for duplicate records 
  * @param {String} table The table to check for duplicates from
- * @param {String} key The database field to check for duplicates on
- * @param {String} value The value of the key to look for
+ * @param {Object} field The field to check for duplicates on
+ * @param {Number} projectID (Optional) Pass in the project ID if the duplicate check is project specific.
  * @param {String} alias If a duplicate is found, a string is returned "<Alias> is already taken. Please try a different value."
  */
-async function CheckForDuplicates(table, key, value, alias = key) {
+async function CheckForDuplicates(settings, field, projectID = -1) {
     try {
-        const count = await db.query(escape`SELECT COUNT(*) FROM `.append(table).append(` WHERE ${key} = "${value}"`));
+        let filter = "WHERE " + field.field + " = '" + field.value + "'"; 
+        if(settings.project_specific) filter += " AND project_id = " + projectID;
+
+        const count = await db.query(escape`SELECT COUNT(*) FROM `.append(settings.database.table).append(" ").append(filter));
         const taken = (count[0]["COUNT(*)"] > 0) ? true : false;
        
-        if(taken) throw alias + " is already taken. Please try a different value.";
+        if(taken) throw field.alias + " is already taken. Please try a different value.";
         return {success: true}
     } 
+    catch (error) {
+        return {success: false, message: error}
+    }
+ }
+
+ /**
+  * Converts the field data type to the supplied type. Defaults to string.
+  * @param {Object} field The field to perform data type conversion on
+  */
+ async function ConvertDataTypes(field) {
+    try {
+        field.type = (field.type === undefined) ? "string" : field.type;
+
+        if(field.type == "string" && typeof field.value !== "string") {
+            field.value.toString();
+            if(typeof field.value !== "string") throw "Unable to convert " + field.field + " to a " + field.type + "!"; 
+        }
+        else if(field.type == "number" && typeof field.value !== "number") {
+            field.value = parseInt(field.value);
+            if(isNaN(field.value)) throw "Unable to convert " + field.field + " to a " + field.type + "!";
+        }
+
+        return {success: true, result: field.value}
+    }
     catch (error) {
         return {success: false, message: error}
     }
@@ -34,13 +61,13 @@ async function CheckForDuplicates(table, key, value, alias = key) {
  * @param {String} sql The SQL query to execute that's returned
  * @returns {Object} Returns the result of our SQL query from the supplied parameters.
  */
-async function Get(id, sql) {
+async function Get (id, sql) {
     try {
         if(isNaN(id) || id === undefined || id <= 0) {
             throw "No results found with the supplied ID!";
         }
 
-        const result = await db.query(escape``.append(sql));
+        const [result] = await db.query(escape``.append(sql));
         if(result === undefined || result.length < 1) {
             throw "No results found with the supplied ID!"
         }
@@ -116,17 +143,25 @@ async function Create (data, settings) {
         let INSERT_STRING_ADDITIONAL_VALUES = `'${now}', '${by}', '${now}', '${by}'`;
 
         let returnObj = {};
-        
         for(let field in data.fields) {
             let key = data.fields[field].field;
             let value = data.fields[field].value;
+            let alias = data.fields[field].alias;
             
             if(data.fields[field].required) {
                 if(value === undefined || value === "" || value === " ") throw "You must supply a " + key + "!";
             }
 
+            if(alias === undefined) alias = key;
+
+            if(value !== undefined) {
+                const types = await ConvertDataTypes(data.fields[field]);
+                if(!types.success) throw types.message;
+                value = types.result;
+            }
+
             if(data.fields[field].unique) {
-                const duplicates = await CheckForDuplicates(settings.database.table, key, value, data.fields[field].alias);
+                const duplicates = await CheckForDuplicates(settings, data.fields[field], settings.project_id);
                 if(!duplicates.success) throw duplicates.message;
             }
 
@@ -156,7 +191,7 @@ async function Create (data, settings) {
             if(key != "password" && value != "NULL") returnObj[key] = value;
                      
             if(value === undefined) value = "NULL";
-            else value = "'" + value + "'";
+            else if(typeof value == "string") value = "'" + value + "'"; 
 
             if(field != data.fields.length - 1) {
                 INSERT_STRING_FIELDS += key + ","
@@ -170,8 +205,9 @@ async function Create (data, settings) {
         const INSERT_STRING = INSERT_STRING_START + INSERT_STRING_FIELDS + INSERT_STRING_VALUES;
         result = await db.query(INSERT_STRING);
         if(result.error) throw "#" + result.error.errno + " " + result.error.sqlMessage;
- 
-        return JSON.stringify({ success: true, result: returnObj });
+
+        returnObj["id"] = result.insertId;
+        return JSON.stringify({ success: true, result: returnObj  });
     }
     catch (err) {
         return JSON.stringify({ success: false, message: err });
@@ -213,19 +249,19 @@ async function Update (data, targetData, settings) {
             // Get the value from the params object. If it's undefined, use the original value, otherwise update the value.
             let key = data.fields[field].field;
             let value = data.fields[field].value;
-            let type = data.fields[field].type;
-            value = (value === undefined) ? targetData.result[0][key] : value;
-            type = (type === undefined) ? "string" : type;
+           
+            value = (value === undefined) ? targetData.result[key] : value;
+            data.fields[field].value = value;
 
-            if(type == "number") {
-                value = parseInt(value);
-                if(isNaN(value)) throw "Unable to convert " + data.fields[field].field + " to a " + type + "!";
-            }
+            const types = await ConvertDataTypes(data.fields[field]);
+            if(!types.success) throw types.message;
+            
+            if(data.fields[field].alias === undefined) data.fields[field].alias = key;
 
-            if(value !== targetData.result[0][key]) {
+            if(value != targetData.result[key]) {
                 // Check that there are no duplicates for fields marked unique
                 if(data.fields[field].unique) {
-                    const duplicates = await CheckForDuplicates(settings.database.table, key, value);
+                    const duplicates = await CheckForDuplicates(settings, data.fields[field], targetData.result.project_id);
                     if(!duplicates.success) throw duplicates.message;
                 }
 
@@ -261,7 +297,7 @@ async function Update (data, targetData, settings) {
         // Perform the update
         if(UPDATE_STRING_BODY != "" && UPDATE_STRING_BODY !== undefined) {
             const now = moment().format();       
-            const UPDATE_STRING = UPDATE_STRING_START + UPDATE_STRING_BODY + ", last_updated_at = '" + now + "', last_updated_by = '" + settings.session.GetData().user.email + "'" + UPDATE_STRING_END;
+            const UPDATE_STRING = UPDATE_STRING_START + UPDATE_STRING_BODY + "last_updated_at = '" + now + "', last_updated_by = '" + settings.session.GetData().user.email + "' " + UPDATE_STRING_END;
             const result = await db.query(UPDATE_STRING);
             if(result.error) throw "#" + result.error.errno + " " + result.error.sqlMessage;
         }

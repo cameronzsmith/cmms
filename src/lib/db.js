@@ -1,5 +1,5 @@
 const mysql = require('serverless-mysql')
-require('dotenv').config()
+require('dotenv').config();
 
 const db = mysql({
     config: {

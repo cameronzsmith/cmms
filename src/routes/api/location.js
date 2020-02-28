@@ -75,16 +75,18 @@ async function CreateLocation (session, params) {
     try {
         const data = {
             fields: [
-                {field: "project_id", value: params.project_id, required: true, foreign_key: true, table: "project"},
+                {field: "project_id", value: params.project_id, type: "number", required: true, foreign_key: true, table: "project"},
                 {field: "title", value: params.title, required: true, unique: true, alias: "Location name"},
                 {field: "address", value: params.address, required: true},
-                {field: "parent_location_id", value: params.parent_location_id, foreign_key: true, table: "location"}                
+                {field: "parent_location_id", value: params.parent_location_id, type: "number", foreign_key: true, table: "location"}                
             ]
         };
         const settings = {
             session,
             database: { table: "location" },
-            security: { groups: ['Administrator', "Lead"] }
+            security: { groups: ['Administrator', "Lead"] },
+            project_specific: true,
+            project_id: params.project_id
         };
 
         return API.Create(data, settings);
@@ -116,7 +118,8 @@ async function UpdateLocation (session, params) {
             id: params.id,
             session,
             database: { table: "location" },
-            security: { groups: ['Administrator', "Lead"] }
+            security: { groups: ['Administrator', "Lead"] },
+            project_specific: true
         };
 
         const targetData = await this.GetLocation(settings.id);
