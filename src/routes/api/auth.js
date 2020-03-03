@@ -58,9 +58,10 @@ async function Login(req, res) {
         // Compare the password provided in the POST request with the password of the user supplied
         const match = await bcrypt.compare(password, user[0].password);
         if(match) {
-             // Get the current date & time, and the expiration time (1 hour from current time)
+             // Get the current date & time, and the expiration time (15 mins from current time)
             const currentTime = moment().format();
-            const expiresAt = moment().hour(moment().hour() + 1).format();
+            const expirationTime = 15 * 60 * 1000;
+            const expiresAt = new Date(new Date().getTime() + expirationTime);
 
             // Update the last login of the user
             await db.query(escape`
@@ -71,8 +72,8 @@ async function Login(req, res) {
 
             // Use JWT to sign a user token that expires after 1 hour
             const privateKey = fs.readFileSync('./src/private.key', 'utf8');
-            jwt.sign({ data: user }, privateKey, { algorithm: 'RS256', expiresIn: "1h" }, (err, token) => {
-                if (err) throw err;
+            jwt.sign({ data: user }, privateKey, { algorithm: 'RS256', expiresIn: expirationTime }, (err, token) => {
+                if (err) throw err.message;
                 return res.json({success: true, token: {sessionToken: token, createdAt: currentTime, expiresAt}});
             });
         } else {

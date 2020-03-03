@@ -1,76 +1,51 @@
-
-import { Component } from 'react'
-import Layout from '../components/layout';
-import Form from '../components/form';
+// NPM plugins
+import React from 'react';
 import Link from 'next/link';
+import Cookies from 'js-cookie';
+import Router from 'next/router';
 
-class Login extends Component {
-    constructor(props) {
-        super(props);
-        
-        this.state = {
-            username: '',
-            password: ''
-        };
+// React components
+import Layout from '../components/Layout';
+import LoginForm from '../components/LoginForm';
 
-        this.changeUsername = this.changeUsername.bind(this);
-        this.changePassword = this.changePassword.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-    }
-    changeUsername(event) {
-        this.setState({ username: event.target.value });
-    }
-    changePassword(event) {
-        this.setState({ password: event.target.value });
-    }
-    handleSubmit(event) {
-        event.preventDefault();
+// MaterialUI
+import { Grid, Card, Container } from '@material-ui/core'
+import { makeStyles } from '@material-ui/core/styles';
 
-        let url = new URL("http://localhost:3000/api/auth");
-        let params = {email: this.state.username, password: this.state.password};
-        Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+const useStyles = makeStyles(theme => ({
+    root: {
+        marginTop: 30,
+        textAlign: "center",
+    },
+    item: {
+        margin: 0,
+    },
+    card: {
+        padding: "10px 30px",
+    },
+}));
 
-        fetch(url, {
-            method: 'POST', 
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then((res) => {
-            return res.json();
-        }).then((data) => {
-            // todo: store a cookie with the authenticated user session
-            // data.token.sessionToken
-        }).catch((err) => {
-            alert("Error: " + err.message);
-        });
-    }
-    render() {
-        return (
-            <Layout>
-                <Form>
-                    <h2>Login</h2>
-                    <p>Welcome back! Please enter your email and password to log in.</p>
-                    <form onSubmit={this.handleSubmit} method="POST">
-                        <div>
-                            <input type="email" value={this.state.username} onChange={this.changeUsername} id="username" name="username" placeholder="Email address"></input>
-                        </div>
-                        <div>
-                            <input type="password" value={this.state.password} onChange={this.changePassword} id="password" name="password" placeholder="Password"></input>
-                        </div>
-                        <div>
-                            <input type="submit" value="Log In"></input>
-                            <p>
-                                Don't have an account yet?
-                                <Link href="/profile/register">
-                                    <a> Sign up now.</a>
-                                </Link>
-                            </p>
-                        </div>
-                    </form>
-                </Form>
-            </Layout>
-        );
-    }
-}
+export default function Login () {
+    //const token = Cookies.get("Token");
+    //if(token !== undefined) Router.push("/");
 
-export default Login
+    const classes = useStyles();
+    return (
+        <Container>
+            <Grid container spacing={3} direction="column" alignItems="center" justify="center" className={classes.root}>
+                <Grid item xs={12} className={classes.item}>
+                    <Link href="/">
+                        <a><img src="https://via.placeholder.com/350x150?text=Your+Brand+Here" /></a>
+                    </Link>
+                </Grid>
+                <Grid item xs={12}>
+                    <Card className={classes.card}>
+                        <h2>Login</h2>
+                        <p>Welcome back! Please enter your email and password to log in.</p>
+                        <LoginForm />
+                    </Card>
+                </Grid>
+            </Grid>
+        </Container>
+    );
+};

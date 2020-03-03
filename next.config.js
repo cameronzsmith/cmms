@@ -9,3 +9,6 @@ module.exports = {
         SECRET: process.env.SECRET
     }
 }
+
+const withCSS = require("@zeit/next-css")
+module.exports = withCSS()
